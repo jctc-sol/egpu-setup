@@ -49,4 +49,36 @@ The most important part of this step is to correctly identify the version of CUD
 - Follow the instructions provided in the Installation Guide to complete the installation of CUDA Driver, CUDA Toolkit	, and CUDA Samples.
 
 ### Checkpoint
-Follow instructions under the *Verification* section of the Installation to build samples *deviceQuery* and *bandwidthTest*. This will verify that your CUDA installation can query and profile your eGPU device.
+Follow instructions under the *Verification* section of the Installation to build and run the  *deviceQuery* and *bandwidthTest* samples. This will verify that your CUDA installation can query and profile your eGPU device.
+
+## Step 3. Install PyTorch compiled with CUDA
+Unfortunately the normal PyTorch versions available through `pip install` or `conda install` do not come with CUDA pre-compiled (at least for OSX systems). This requires us to build PyTorch from source and you will need to find the specific release version that works with your installed CUDA version. The specifics can be found in the [**From Source**](https://github.com/pytorch/pytorch#from-source) section of the official PyTorch Github repo page. The installation instruction is under the [On macOS](https://github.com/pytorch/pytorch#install-pytorch) section of the page.
+
+This [eGPU setup blog post](https://mc.ai/accelerated-deep-learning-on-a-macbook-with-pytorch-the-egpu-nvidia-titan-xp/) by Janne Spijkervet provides execellent instructions on installing `miniconda` and setting up a separate `conda env` in preparation for your PyTorch installation and this is highly recommended to insulate the rest of your system from the installation process. I had followed her instructions and checkouted out `v1.0rc1` of PyTorch for installation. Her instructions are generally good and detailed, but when I tried to do it, the process complained about a missing submodule "nervanagpu", which was removed from NervanaSystems' GitHub. [This thread](https://github.com/gpgpu-sim/pytorch-gpgpu-sim/issues/3) provided the solution to get around this issue, which was to simply remove reference to this submodule in your local git repo ([source](https://gist.github.com/myusuf3/7f645819ded92bda6677)):
+```
+To remove a submodule you need to:
+
+- Delete the relevant section from the .gitmodules file.
+- Stage the .gitmodules changes git add .gitmodules
+- Delete the relevant section from .git/config.
+- Run git rm --cached path_to_submodule (no trailing slash).
+- Run rm -rf .git/modules/path_to_submodule (no trailing slash).
+- Commit git commit -m "Removed submodule "
+- Delete the now untracked submodule files rm -rf path_to_submodule
+``` 
+
+The PyTorch installation process building from source takes an awful long time to complete (but the result is worth the wait!). After the installation completes, continue to follow Jane's instructions on **Compile and install torchvision** from source to also install the `torchvision` module.
+
+### Checkpoint
+Start your python session and `import torch`. Create a random tensor object and attempt to load it on to your GPU as follows:
+```
+python
+import torch
+torch.cuda.is_available()
+print(torch.cuda.device_name(0))
+d = torch.device("cuda")
+x = torch.tensor([1.0, 2.0]).to(d)
+```
+If this executes without problem, then you're good to go!
+
+
